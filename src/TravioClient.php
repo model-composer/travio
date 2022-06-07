@@ -190,17 +190,17 @@ class TravioClient
 						$config['target_types'] = $config['target-types'];
 						unset($config['target-types']);
 
-						$config['master_data'] = $config['master-data'];
-						unset($config['master-data']);
+						$config['import']['master_data'] = $config['import']['master-data'];
+						unset($config['import']['master-data']);
 
-						$config['payment_methods'] = $config['payment-methods'];
-						unset($config['payment-methods']);
+						$config['import']['payment_methods'] = $config['import']['payment-methods'];
+						unset($config['import']['payment-methods']);
 
-						$config['payment_conditions'] = $config['payment-conditions'];
-						unset($config['payment-conditions']);
+						$config['import']['payment_conditions'] = $config['import']['payment-conditions'];
+						unset($config['import']['payment-conditions']);
 
-						$config['luggage_types'] = $config['luggage-types'];
-						unset($config['luggage-types']);
+						$config['import']['luggage_types'] = $config['import']['luggage-types'];
+						unset($config['import']['luggage-types']);
 
 						return $config;
 					}
