@@ -83,17 +83,9 @@ class TravioClient
 	public static function getAuth(): string
 	{
 		if (isset($_SESSION['travio-auth'])) {
-			try {
-				$token = explode('.', $_SESSION['travio-auth']);
-				if (count($token) !== 3)
-					throw new \Exception();
-
-				$decoded = json_decode(FirebaseJWT::urlsafeB64Decode($token[1]), true, 512, JSON_THROW_ON_ERROR);
-				if (empty($decoded['exp']) or $decoded['exp'] < time())
-					throw new \Exception();
-			} catch (\Exception $e) {
+			$decoded = self::decodeTokenIfValid();
+			if (!$decoded)
 				unset($_SESSION['travio-auth']);
-			}
 		}
 
 		if (!isset($_SESSION['travio-auth']))
@@ -119,10 +111,33 @@ class TravioClient
 	}
 
 	/**
+	 * Decode token if valid and not expired
+	 *
+	 * @return array|null
+	 */
+	private static function decodeTokenIfValid(): ?array
+	{
+		try {
+			$token = explode('.', $_SESSION['travio-auth'] ?? '');
+			if (count($token) !== 3)
+				throw new \Exception();
+
+			$decoded = json_decode(FirebaseJWT::urlsafeB64Decode($token[1]), true, 512, JSON_THROW_ON_ERROR);
+			if (empty($decoded['exp']) or $decoded['exp'] < time())
+				throw new \Exception();
+
+			return $decoded;
+		} catch (\Exception $e) {
+			return null;
+		}
+	}
+
+	/**
 	 * @param string $username
 	 * @param string $password
+	 * @throws \Exception
 	 */
-	public function login(string $username, string $password): void
+	public static function login(string $username, string $password): void
 	{
 		$_SESSION['travio-auth'] = self::request('POST', 'login', [
 			'username' => $username,
@@ -132,7 +147,14 @@ class TravioClient
 
 	/**
 	 */
-	public function logout(): void
+	public static function logged(): ?array
+	{
+		return self::decodeTokenIfValid();
+	}
+
+	/**
+	 */
+	public static function logout(): void
 	{
 		if (isset($_SESSION['travio-auth']))
 			unset($_SESSION['travio-auth']);
@@ -144,7 +166,7 @@ class TravioClient
 	 * @return array
 	 * @throws \Exception
 	 */
-	private static function getConfig(): array
+	public static function getConfig(): array
 	{
 		return Config::get('travio', [
 			[
