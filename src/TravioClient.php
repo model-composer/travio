@@ -307,7 +307,7 @@ class TravioClient
 		], [
 			'auth.id' ,
 			'auth.key',
-			'auth.dev' => 'bool',
+			'dev' => 'bool',
 		]);
 	}
 }
