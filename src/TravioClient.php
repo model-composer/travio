@@ -83,7 +83,7 @@ class TravioClient
 	public static function getAuth(): string
 	{
 		if (isset($_SESSION['travio-auth'])) {
-			$decoded = self::decodeTokenIfValid();
+			$decoded = self::decodeTokenIfValid($_SESSION['travio-auth']);
 			if (!$decoded)
 				unset($_SESSION['travio-auth']);
 		}
@@ -115,10 +115,10 @@ class TravioClient
 	 *
 	 * @return array|null
 	 */
-	private static function decodeTokenIfValid(): ?array
+	private static function decodeTokenIfValid(string $token): ?array
 	{
 		try {
-			$token = explode('.', $_SESSION['travio-auth'] ?? '');
+			$token = explode('.', $token);
 			if (count($token) !== 3)
 				throw new \Exception();
 
@@ -135,21 +135,31 @@ class TravioClient
 	/**
 	 * @param string $username
 	 * @param string $password
+	 * @return string
 	 * @throws \Exception
 	 */
-	public static function login(string $username, string $password): void
+	public static function login(string $username, string $password): string
 	{
-		$_SESSION['travio-auth'] = self::request('POST', 'login', [
+		$response = self::request('POST', 'login', [
 			'username' => $username,
 			'password' => $password,
 		]);
+
+		$_SESSION['travio-auth'] = $response['token'];
+
+		return $_SESSION['travio-auth'];
 	}
 
 	/**
+	 * @param string|null $token
+	 * @return array|null
 	 */
-	public static function logged(): ?array
+	public static function logged(?string $token = null): ?array
 	{
-		return self::decodeTokenIfValid();
+		if ($token === null)
+			$token = $_SESSION['travio-auth'] ?? '';
+
+		return self::decodeTokenIfValid($token);
 	}
 
 	/**
