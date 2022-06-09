@@ -39,7 +39,7 @@ class TravioClient
 
 		if ($payload !== null) {
 			$body = json_encode($payload);
-			$headers[] = 'Content-Type: text/json';
+			$headers[] = 'Content-Type: application/json';
 			$headers[] = 'Content-length: ' . strlen($body);
 			curl_setopt($c, CURLOPT_POSTFIELDS, $body);
 		}
@@ -304,6 +304,10 @@ class TravioClient
 					];
 				},
 			],
+		], [
+			'auth.id' ,
+			'auth.key',
+			'auth.dev' => 'bool',
 		]);
 	}
 }
