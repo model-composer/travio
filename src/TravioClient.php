@@ -5,6 +5,19 @@ use Model\Config\Config;
 
 class TravioClient
 {
+	private static string $forcedToken;
+
+	/**
+	 * Forces a specific token (instead of using the session)
+	 *
+	 * @param string $token
+	 * @return void
+	 */
+	public static function setAuthToken(string $token): void
+	{
+		self::$forcedToken = $token;
+	}
+
 	/**
 	 * @param string $method
 	 * @param string $endpoint
@@ -82,6 +95,9 @@ class TravioClient
 	 */
 	public static function getAuth(): string
 	{
+		if (isset(self::$forcedToken))
+			return self::$forcedToken;
+
 		if (isset($_SESSION['travio-auth'])) {
 			$decoded = self::decodeTokenIfValid($_SESSION['travio-auth']);
 			if (!$decoded)
