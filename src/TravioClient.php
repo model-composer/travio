@@ -5,7 +5,7 @@ use Model\Config\Config;
 
 class TravioClient
 {
-	private static string $forcedToken;
+	private static ?string $forcedToken = null;
 
 	/**
 	 * Forces a specific token (instead of using the session)
@@ -95,7 +95,7 @@ class TravioClient
 	 */
 	public static function getAuth(): string
 	{
-		if (isset(self::$forcedToken))
+		if (self::$forcedToken)
 			return self::$forcedToken;
 
 		if (isset($_SESSION['travio-auth'])) {
@@ -182,6 +182,7 @@ class TravioClient
 	 */
 	public static function logout(): void
 	{
+		self::$forcedToken = null;
 		if (isset($_SESSION['travio-auth']))
 			unset($_SESSION['travio-auth']);
 	}
