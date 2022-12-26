@@ -1,4 +1,4 @@
-<?php namespace Model\Travio;
+<?php namespace Model\Travio\Providers;
 
 use Model\Config\AbstractConfigProvider;
 
