@@ -186,4 +186,36 @@ class TravioClient
 		if (isset($_SESSION['travio-auth']))
 			unset($_SESSION['travio-auth']);
 	}
+
+	public static function search(array $payload, ?string $cart = null): array
+	{
+		if (!$cart and isset($_SESSION['travio-cart']))
+			$cart = $_SESSION['travio-cart'];
+		if ($cart)
+			$payload['cart'] = $cart;
+
+		$response = self::request('POST', 'booking/search', $payload);
+
+		$_SESSION['travio-cart'] = $response['cart'];
+
+		return $response;
+	}
+
+	public static function results(array $payload): array
+	{
+		return self::request('POST', 'booking/results', $payload);
+	}
+
+	public static function pick(array $payload): array
+	{
+		return self::request('POST', 'booking/picks', $payload);
+	}
+
+	public static function getCart(): ?array
+	{
+		if (!isset($_SESSION['travio-cart']))
+			return null;
+
+		return self::request('GET', 'booking/cart/' . $_SESSION['travio-cart']);
+	}
 }
