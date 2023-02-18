@@ -132,6 +132,13 @@ class ConfigProvider extends AbstractConfigProvider
 					];
 				},
 			],
+			[
+				'version' => '0.1.13',
+				'migration' => function (array $currentConfig, string $env) {
+					$currentConfig['share_session_cart'] = true;
+					return $currentConfig;
+				},
+			],
 		];
 	}
 

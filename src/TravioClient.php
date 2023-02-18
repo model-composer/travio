@@ -189,14 +189,16 @@ class TravioClient
 
 	public static function search(array $payload, ?string $cart = null): array
 	{
-		if (!$cart and isset($_SESSION['travio-cart']))
+		$config = Config::get('travio');
+		if ($config['share_session_cart'] and !$cart and isset($_SESSION['travio-cart']))
 			$cart = $_SESSION['travio-cart'];
 		if ($cart)
 			$payload['cart'] = $cart;
 
 		$response = self::request('POST', 'booking/search', $payload);
 
-		$_SESSION['travio-cart'] = $response['cart'];
+		if ($config['share_session_cart'])
+			$_SESSION['travio-cart'] = $response['cart'];
 
 		return $response;
 	}
