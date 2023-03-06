@@ -208,7 +208,7 @@ class TravioClient
 		return self::request('POST', 'booking/results', $payload);
 	}
 
-	public static function pick(array $payload): array
+	public static function picks(array $payload): array
 	{
 		return self::request('POST', 'booking/picks', $payload);
 	}
