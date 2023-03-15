@@ -213,11 +213,27 @@ class TravioClient
 		return self::request('POST', 'booking/picks', $payload);
 	}
 
-	public static function getCart(): ?array
+	public static function addToCart(string $search_id): array
 	{
-		if (!isset($_SESSION['travio-cart']))
+		return self::request('PUT', 'booking/cart', ['search_id' => $search_id]);
+	}
+
+	public static function getCart(?string $cart = null): ?array
+	{
+		if (!$cart) {
+			$config = Config::get('travio');
+			if ($config['share_session_cart'] and isset($_SESSION['travio-cart']))
+				$cart = $_SESSION['travio-cart'];
+		}
+
+		if (!$cart)
 			return null;
 
-		return self::request('GET', 'booking/cart/' . $_SESSION['travio-cart']);
+		return self::request('GET', 'booking/cart/' . $cart);
+	}
+
+	public static function removeFromCart(string $search_id): array
+	{
+		return self::request('DELETE', 'booking/cart', ['search_id' => $search_id]);
 	}
 }
