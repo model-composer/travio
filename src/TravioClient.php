@@ -218,7 +218,7 @@ class TravioClient
 		return self::request('PUT', 'booking/cart', ['search_id' => $search_id]);
 	}
 
-	public static function getCart(?string $cart = null): ?array
+	public static function getCart(?string $cart = null, array $options = []): ?array
 	{
 		if (!$cart) {
 			$config = Config::get('travio');
@@ -229,7 +229,7 @@ class TravioClient
 		if (!$cart)
 			return null;
 
-		return self::request('GET', 'booking/cart/' . $cart);
+		return self::request('GET', 'booking/cart/' . $cart . '?' . http_build_query($options));
 	}
 
 	public static function removeFromCart(string $search_id): array
