@@ -148,6 +148,12 @@ class TravioClient
 		}
 	}
 
+	public static function clearTokenCache(): void
+	{
+		if (isset($_SESSION['travio-auth']))
+			unset($_SESSION['travio-auth']);
+	}
+
 	/**
 	 * @param string $username
 	 * @param string $password
@@ -175,7 +181,11 @@ class TravioClient
 		if ($token === null)
 			$token = $_SESSION['travio-auth'] ?? '';
 
-		return self::decodeTokenIfValid($token);
+		$decoded = self::decodeTokenIfValid($token);
+		if (empty($decoded['user']))
+			return null;
+
+		return $decoded;
 	}
 
 	/**
@@ -183,8 +193,7 @@ class TravioClient
 	public static function logout(): void
 	{
 		self::$forcedToken = null;
-		if (isset($_SESSION['travio-auth']))
-			unset($_SESSION['travio-auth']);
+		self::clearTokenCache();
 	}
 
 	public static function search(array $payload, ?string $cart = null): array
