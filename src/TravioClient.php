@@ -245,4 +245,10 @@ class TravioClient
 	{
 		return self::request('DELETE', 'booking/cart', ['search_id' => $search_id]);
 	}
+
+	public static function place(string $cart_id, array $pax, array $payload = []): array
+	{
+		$payload['pax'] = $pax;
+		return self::request('POST', 'booking/place/' . $cart_id, $payload);
+	}
 }
