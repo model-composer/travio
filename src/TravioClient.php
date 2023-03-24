@@ -222,9 +222,9 @@ class TravioClient
 		return self::request('POST', 'booking/picks', $payload);
 	}
 
-	public static function addToCart(string $search_id): array
+	public static function addToCart(array $payload): array
 	{
-		return self::request('PUT', 'booking/cart', ['search_id' => $search_id]);
+		return self::request('PUT', 'booking/cart', $payload);
 	}
 
 	public static function getCart(?string $cart = null, array $options = []): ?array
