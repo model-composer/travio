@@ -185,6 +185,9 @@ class TravioClient
 		if (empty($decoded['user']))
 			return null;
 
+		if (!isset($_SESSION['travio-user-profile']) or $_SESSION['travio-user-profile']['id'] !== $decoded['user'])
+			$_SESSION['travio-user-profile'] = self::request('GET', 'profile')['user'];
+
 		return $decoded;
 	}
 
