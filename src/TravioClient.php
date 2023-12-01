@@ -254,4 +254,37 @@ class TravioClient
 		$payload['pax'] = $pax;
 		return self::request('POST', 'booking/place/' . $cart_id, $payload);
 	}
+
+	public static function restList(string $repository, array $query = []): array
+	{
+		if (isset($query['filters']))
+			$query['filters'] = json_encode($query['filters']);
+		if (isset($query['sort_by']))
+			$query['sort_by'] = json_encode($query['sort_by']);
+
+		$response = self::request('GET', 'rest/' . $repository . '?' . http_build_query($query));
+		return $response;
+	}
+
+	public static function restGet(string $repository, int $id): array
+	{
+		$response = self::request('GET', 'rest/' . $repository . '/' . $id);
+		return $response['data'];
+	}
+
+	public static function restCreate(string $repository, array $payload): int
+	{
+		$response = self::request('POST', 'rest/' . $repository, ['data' => $payload]);
+		return $response['id'];
+	}
+
+	public static function restUpdate(string $repository, int $id, array $payload): void
+	{
+		self::request('PUT', 'rest/' . $repository . '/' . $id, ['data' => $payload]);
+	}
+
+	public static function restDelete(string $repository, int $id): void
+	{
+		self::request('DELETE', 'rest/' . $repository . '/' . $id);
+	}
 }
