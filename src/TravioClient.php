@@ -138,7 +138,11 @@ class TravioClient
 			if (count($token) !== 3)
 				throw new \Exception();
 
-			return json_decode(FirebaseJWT::urlsafeB64Decode($token[1]), true, 512, JSON_THROW_ON_ERROR);
+			$decoded = json_decode(FirebaseJWT::urlsafeB64Decode($token[1]), true, 512, JSON_THROW_ON_ERROR);
+			if (!empty($decoded['exp']) and $decoded['exp'] < time())
+				throw new \Exception();
+
+			return $decoded;
 		} catch (\Exception $e) {
 			return null;
 		}
