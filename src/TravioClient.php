@@ -288,8 +288,12 @@ class TravioClient
 		self::request('DELETE', 'rest/' . $repository . '/' . $id);
 	}
 
-	public static function getSignedUrl(string $url): string
+	public static function getSignedUrl(string $url): ?string
 	{
-		return self::request('POST', 'tools/get-signed-url', ['url' => $url])['url'];
+		try {
+			return self::request('POST', 'tools/get-signed-url', ['url' => $url])['url'];
+		} catch (\Exception $e) {
+			return null;
+		}
 	}
 }
