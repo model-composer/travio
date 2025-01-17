@@ -266,9 +266,12 @@ class TravioClient
 		return $response;
 	}
 
-	public static function restGet(string $repository, int $id): array
+	public static function restGet(string $repository, int $id, array $options = []): array
 	{
-		$response = self::request('GET', 'rest/' . $repository . '/' . $id);
+		if (isset($options['unfold']))
+			$options['unfold'] = implode(',', $options['unfold']);
+
+		$response = self::request('GET', 'rest/' . $repository . '/' . $id . '?' . http_build_query($options));
 		return $response['data'];
 	}
 
