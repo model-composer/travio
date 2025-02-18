@@ -2,9 +2,12 @@
 
 use Firebase\JWT\JWT as FirebaseJWT;
 use Model\Config\Config;
+use Model\Session\Session;
+use Model\Session\SessionInterface;
 
 class TravioClient
 {
+	private static SessionInterface $session;
 	private static ?string $forcedToken = null;
 
 	/**
@@ -16,6 +19,24 @@ class TravioClient
 	public static function setAuthToken(string $token): void
 	{
 		self::$forcedToken = $token;
+	}
+
+	/**
+	 * @return SessionInterface
+	 */
+	private static function session(): SessionInterface
+	{
+		if (!isset(self::$session))
+			self::$session = new Session();
+		return self::$session;
+	}
+
+	/**
+	 * @param SessionInterface $session
+	 */
+	public static function setSession(SessionInterface $session): void
+	{
+		self::$session = $session;
 	}
 
 	/**
@@ -98,16 +119,17 @@ class TravioClient
 		if (self::$forcedToken)
 			return self::$forcedToken;
 
-		if (isset($_SESSION['travio-auth'])) {
-			$decoded = self::decodeTokenIfValid($_SESSION['travio-auth']);
+		$session = self::session();
+		if ($session->has('travio-auth')) {
+			$decoded = self::decodeTokenIfValid($session->get('travio-auth'));
 			if (!$decoded)
-				unset($_SESSION['travio-auth']);
+				$session->delete('travio-auth');
 		}
 
-		if (!isset($_SESSION['travio-auth']))
-			$_SESSION['travio-auth'] = self::requestAuthToken();
+		if (!$session->has('travio-auth'))
+			$session->set('travio-auth', self::requestAuthToken());
 
-		return $_SESSION['travio-auth'];
+		return $session->get('travio-auth');
 	}
 
 	/**
@@ -150,8 +172,9 @@ class TravioClient
 
 	public static function clearTokenCache(): void
 	{
-		if (isset($_SESSION['travio-auth']))
-			unset($_SESSION['travio-auth']);
+		$session = self::session();
+		if ($session->has('travio-auth'))
+			$session->delete('travio-auth');
 	}
 
 	/**
@@ -167,9 +190,9 @@ class TravioClient
 			'password' => $password,
 		]);
 
-		$_SESSION['travio-auth'] = $response['token'];
+		self::session()->set('travio-auth', $response['token']);
 
-		return $_SESSION['travio-auth'];
+		return $response['token'];
 	}
 
 	/**
@@ -178,17 +201,18 @@ class TravioClient
 	 */
 	public static function logged(?string $token = null): ?array
 	{
+		$session = self::session();
 		if ($token === null)
-			$token = $_SESSION['travio-auth'] ?? '';
+			$token = $session->has('travio-auth') ? $session->get('travio-auth') : '';
 
 		$decoded = self::decodeTokenIfValid($token);
 		if (empty($decoded['user']))
 			return null;
 
-		if (!isset($_SESSION['travio-user-profile']) or $_SESSION['travio-user-profile']['id'] !== $decoded['user'])
-			$_SESSION['travio-user-profile'] = self::request('GET', 'profile')['user'];
+		if (!$session->has('travio-user-profile') or $session->get('travio-user-profile')['id'] !== $decoded['user'])
+			$session->set('travio-user-profile', self::request('GET', 'profile')['user']);
 
-		return $_SESSION['travio-user-profile'];
+		return $session->get('travio-user-profile');
 	}
 
 	/**
@@ -201,16 +225,18 @@ class TravioClient
 
 	public static function search(array $payload, ?string $cart = null): array
 	{
+		$session = self::session();
+
 		$config = Config::get('travio');
-		if ($config['share_session_cart'] and !$cart and isset($_SESSION['travio-cart']))
-			$cart = $_SESSION['travio-cart'];
+		if ($config['share_session_cart'] and !$cart and $session->has('travio-cart'))
+			$cart = $session->get('travio-cart');
 		if ($cart)
 			$payload['cart'] = $cart;
 
 		$response = self::request('POST', 'booking/search', $payload);
 
 		if ($config['share_session_cart'])
-			$_SESSION['travio-cart'] = $response['cart'];
+			$session->set('travio-cart', $response['cart']);
 
 		return $response;
 	}
@@ -234,8 +260,8 @@ class TravioClient
 	{
 		if (!$cart) {
 			$config = Config::get('travio');
-			if ($config['share_session_cart'] and isset($_SESSION['travio-cart']))
-				$cart = $_SESSION['travio-cart'];
+			if ($config['share_session_cart'] and self::session()->has('travio-cart'))
+				$cart = self::session()->get('travio-cart');
 		}
 
 		if (!$cart)
