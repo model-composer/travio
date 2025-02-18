@@ -50,10 +50,6 @@ class TravioClient
 	{
 		$method = strtoupper($method);
 
-		// TODO: multilingua
-//		if (!isset($payload['lang']))
-//			$payload['lang'] = $this->model->_Multilang->lang;
-
 		// TODO: debug mode e server staging
 //		$url = $this->makeUrl($request, $get);
 
@@ -77,6 +73,9 @@ class TravioClient
 			$headers[] = 'Content-length: ' . strlen($body);
 			curl_setopt($c, CURLOPT_POSTFIELDS, $body);
 		}
+
+		if (class_exists('\\Model\\Multilang\\Ml'))
+			$headers[] = 'X-Lang: ' . \Model\Multilang\Ml::getLang();
 
 		curl_setopt($c, CURLOPT_HTTPHEADER, $headers);
 		curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
