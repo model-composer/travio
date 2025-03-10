@@ -174,6 +174,15 @@ class TravioClient
 		$session = self::session();
 		if ($session->has('travio-auth'))
 			$session->delete('travio-auth');
+		if ($session->has('travio-user-profile'))
+			$session->delete('travio-user-profile');
+	}
+
+	public static function reloadSessionProfile(): void
+	{
+		$session = self::session();
+		if ($session->has('travio-user-profile'))
+			$session->delete('travio-user-profile');
 	}
 
 	/**
