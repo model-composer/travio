@@ -296,8 +296,18 @@ class TravioClient
 		if (isset($query['sort_by']))
 			$query['sort_by'] = json_encode($query['sort_by']);
 
-		$response = self::request('GET', 'rest/' . $repository . '?' . http_build_query($query));
-		return $response;
+		return self::request('GET', 'rest/' . $repository . '?' . http_build_query($query));
+	}
+
+	public static function restFind(string $repository, array $filters = [], array $options = []): ?array
+	{
+		$list = self::restList($repository, [
+			...$options,
+			'filters' => $filters,
+			'per_page' => 1,
+		]);
+
+		return $list['list'] ? $list['list'][0] : null;
 	}
 
 	public static function restGet(string $repository, int $id, array $options = []): array
