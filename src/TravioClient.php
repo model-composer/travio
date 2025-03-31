@@ -295,6 +295,8 @@ class TravioClient
 			$query['filters'] = json_encode($query['filters']);
 		if (isset($query['sort_by']))
 			$query['sort_by'] = json_encode($query['sort_by']);
+		if (isset($query['sublists']))
+			$query['sublists'] = implode(',', $query['sublists']);
 
 		return self::request('GET', 'rest/' . $repository . '?' . http_build_query($query));
 	}
