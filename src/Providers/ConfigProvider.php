@@ -144,7 +144,7 @@ class ConfigProvider extends AbstractConfigProvider
 				'migration' => function (array $currentConfig, string $env) {
 					$currentConfig['availability_dates'] = [
 						'min_stay_from' => 'in',
-						'out_weekdays_from' => 'in',
+						'out_weekdays_from' => 'out',
 					];
 					return $currentConfig;
 				},
