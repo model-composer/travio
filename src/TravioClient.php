@@ -87,8 +87,6 @@ class TravioClient
 
 		$http_code = curl_getinfo($c, CURLINFO_RESPONSE_CODE);
 
-		curl_close($c);
-
 		$decoded = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
 
 		if ($http_code !== 200) {
