@@ -149,6 +149,13 @@ class ConfigProvider extends AbstractConfigProvider
 					return $currentConfig;
 				},
 			],
+			[
+				'version' => '0.4.0',
+				'migration' => function (array $currentConfig, string $env) {
+					unset($currentConfig['availability_dates']);
+					return $currentConfig;
+				},
+			],
 		];
 	}
 
