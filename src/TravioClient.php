@@ -314,6 +314,8 @@ class TravioClient
 	{
 		if (isset($options['unfold']))
 			$options['unfold'] = implode(',', $options['unfold']);
+		if (isset($options['unfold_sublists']))
+			$options['unfold_sublists'] = implode(',', $options['unfold_sublists']);
 
 		$response = self::request('GET', 'rest/' . $repository . '/' . $id . '?' . http_build_query($options));
 		return $response['data'];
