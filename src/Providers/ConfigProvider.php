@@ -156,6 +156,13 @@ class ConfigProvider extends AbstractConfigProvider
 					return $currentConfig;
 				},
 			],
+			[
+				'version' => '0.4.2',
+				'migration' => function (array $currentConfig, string $env) {
+					$currentConfig['import']['airports']['only_used'] = true;
+					return $currentConfig;
+				},
+			],
 		];
 	}
 
