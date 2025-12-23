@@ -9,6 +9,21 @@ class TravioClient
 {
 	private static SessionInterface $session;
 	private static ?string $forcedToken = null;
+	private static array $typesMap = [
+		1 => ['flight', 'flights'],
+		2 => ['hotel', 'hotels'],
+		3 => ['transfer', 'transfers'],
+		4 => ['tour', 'tours'],
+		5 => ['car_rental', 'car_rentals'],
+		6 => ['cruise', 'cruises'],
+		7 => ['ferry', 'ferries'],
+		14 => ['train', 'trains'],
+		8 => ['fee', 'fees'],
+		12 => ['fee', 'fees'],
+		9 => ['insurance', 'insurances'],
+		11 => ['activity', 'activities'],
+		13 => ['other', 'others'],
+	];
 
 	/**
 	 * Forces a specific token (instead of using the session)
@@ -344,5 +359,32 @@ class TravioClient
 		} catch (\Exception $e) {
 			return null;
 		}
+	}
+
+	public static function getServiceTypeLabel(?string $type, string $kind = 'singular'): ?string
+	{
+		if ($type === null)
+			return null;
+
+		$idx = match ($kind) {
+			'plural' => 1,
+			default => 0,
+		};
+
+		return isset(self::$typesMap[$type]) ? self::$typesMap[$type][$idx] : null;
+	}
+
+	public static function getServiceTypeId(?string $type): ?int
+	{
+		if ($type === null)
+			return null;
+
+		$map = [];
+		foreach (self::$typesMap as $id => $label) {
+			$map[$label[0]] = $id;
+			$map[$label[1]] = $id;
+		}
+
+		return $map[$type] ?? null;
 	}
 }
