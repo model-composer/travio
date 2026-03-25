@@ -111,7 +111,7 @@ class TravioClient
 					$error[] = $decoded['error'];
 				if (isset($decoded['message']))
 					$error[] = $decoded['message'];
-				throw new \Exception('Errore in richiesta ' . $endpoint . ': ' . implode(' - ', $error), $http_code);
+				throw new \Exception('Errore in richiesta ' . $endpoint . ': ' . implode(' - ', $error) . (!empty($decoded['_trace_id']) ? "\nTrace: " . $decoded['_trace_id'] : ''), $http_code);
 			} else {
 				throw new \Exception('Errore in richiesta ' . $endpoint, $http_code);
 			}
