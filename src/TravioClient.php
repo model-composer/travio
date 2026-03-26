@@ -68,7 +68,7 @@ class TravioClient
 		// TODO: debug mode e server staging
 //		$url = $this->makeUrl($request, $get);
 
-		$c = curl_init('https://api.travio.it/' . $endpoint);
+		$c = curl_init('https://api.travio.it/v2/' . $endpoint);
 
 		$headers = [
 			'Connection: close',
