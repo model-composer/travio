@@ -13,7 +13,7 @@
     },
     "require": {
         "model/config": "^0.7.0",
-        "firebase/php-jwt": "^6.2",
+        "firebase/php-jwt": "^7.0",
         "ext-curl": "*",
         "model/session": "^0.3.0"
     }
