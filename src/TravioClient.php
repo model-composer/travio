@@ -58,10 +58,11 @@ class TravioClient
 	 * @param string $method
 	 * @param string $endpoint
 	 * @param array|null $payload
+	 * @param bool $handle401 whether to automatically retry the request with a new token if a 401 is received
 	 * @return array
 	 * @throws \Exception
 	 */
-	public static function request(string $method, string $endpoint, ?array $payload = null): array
+	public static function request(string $method, string $endpoint, ?array $payload = null, bool $handle401 = true): array
 	{
 		$method = strtoupper($method);
 
@@ -103,6 +104,11 @@ class TravioClient
 		$http_code = curl_getinfo($c, CURLINFO_RESPONSE_CODE);
 
 		$decoded = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
+
+		if ($http_code === 401) {
+			self::clearTokenCache();
+			return self::request($method, $endpoint, $payload, false);
+		}
 
 		if ($http_code !== 200) {
 			if (is_array($decoded)) {
