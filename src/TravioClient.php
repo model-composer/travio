@@ -137,17 +137,40 @@ class TravioClient
 		if (self::$forcedToken)
 			return self::$forcedToken;
 
+		// A logged-in user keeps its own token in the session
 		$session = self::session();
 		if ($session->has('travio-auth')) {
 			$decoded = self::decodeTokenIfValid($session->get('travio-auth'));
-			if (!$decoded)
-				$session->delete('travio-auth');
+			if ($decoded)
+				return $session->get('travio-auth');
+			$session->delete('travio-auth');
 		}
 
-		if (!$session->has('travio-auth'))
-			$session->set('travio-auth', self::requestAuthToken());
+		// The anonymous application token is shared across all users via the general cache
+		return self::getAppAuthToken();
+	}
 
-		return $session->get('travio-auth');
+	/**
+	 * Ritorna (richiedendolo se necessario) il token applicativo anonimo, condiviso tra tutti gli utenti tramite la cache generale
+	 *
+	 * @return string
+	 * @throws \Exception
+	 */
+	private static function getAppAuthToken(): string
+	{
+		if (!class_exists('\\Model\\Cache\\Cache'))
+			throw new \Exception('model/cache package not found');
+
+		$cache = \Model\Cache\Cache::getCacheAdapter();
+		return $cache->get('model.travio.auth-token', function (\Symfony\Contracts\Cache\ItemInterface $item): string {
+			$token = self::requestAuthToken();
+
+			// Keep the cached token only as long as it is valid (with a small safety margin)
+			$decoded = self::decodeTokenIfValid($token);
+			$item->expiresAfter(!empty($decoded['exp']) ? max(1, $decoded['exp'] - time() - 60) : 3600);
+
+			return $token;
+		});
 	}
 
 	/**
@@ -195,6 +218,9 @@ class TravioClient
 			$session->delete('travio-auth');
 		if ($session->has('travio-user-profile'))
 			$session->delete('travio-user-profile');
+
+		if (class_exists('\\Model\\Cache\\Cache'))
+			\Model\Cache\Cache::getCacheAdapter()->delete('model.travio.auth-token');
 	}
 
 	public static function reloadSessionProfile(): void

@@ -15,6 +15,7 @@
         "model/config": "^0.7.0",
         "firebase/php-jwt": "^7.0",
         "ext-curl": "*",
-        "model/session": "^0.3.0"
+        "model/session": "^0.3.0",
+        "model/cache": "^0.5.0"
     }
 }
