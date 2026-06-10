@@ -288,7 +288,7 @@ class TravioClient
 
 		$response = self::request('POST', 'booking/search', $payload);
 
-		if ($config['share_session_cart'])
+		if ($config['share_session_cart'] and isset($response['cart']))
 			$session->set('travio-cart', $response['cart']);
 
 		return $response;
