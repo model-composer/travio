@@ -34,6 +34,7 @@ class TravioClient
 	public static function setAuthToken(string $token): void
 	{
 		self::$forcedToken = $token;
+		self::reloadSessionProfile();
 	}
 
 	/**
@@ -256,7 +257,7 @@ class TravioClient
 	{
 		$session = self::session();
 		if ($token === null)
-			$token = $session->has('travio-auth') ? $session->get('travio-auth') : '';
+			$token = self::$forcedToken ?? ($session->has('travio-auth') ? $session->get('travio-auth') : '');
 
 		$decoded = self::decodeTokenIfValid($token);
 		if (empty($decoded['user']))
