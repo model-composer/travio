@@ -284,7 +284,7 @@ class TravioClient
 		$config = Config::get('travio');
 		if ($config['share_session_cart'] and !$cart and $session->has('travio-cart'))
 			$cart = $session->get('travio-cart');
-		if ($cart)
+		if ($cart and empty($payload['cart']) and empty($payload['reservation']))
 			$payload['cart'] = $cart;
 
 		$response = self::request('POST', 'booking/search', $payload);
