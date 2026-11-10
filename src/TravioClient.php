@@ -9,6 +9,11 @@ class TravioClient
 {
 	private static SessionInterface $session;
 	private static ?string $forcedToken = null;
+	private static array $aiTaskTokens = [];
+
+	private const GATEWAY_URL = 'https://gateway.travio.it/';
+	private const AI_TASKS_URL = 'https://support-backend.editt.it/ai/tasks/';
+	private const AI_TASK_TIMEOUT = 90;
 	private static array $typesMap = [
 		1 => ['flight', 'flights'],
 		2 => ['hotel', 'hotels'],
@@ -383,6 +388,107 @@ class TravioClient
 	public static function restDelete(string $repository, int $id): void
 	{
 		self::request('DELETE', 'rest/' . $repository . '/' . $id);
+	}
+
+	/**
+	 * Mints (or reuses while still valid) an AI task assertion for the given task, through Travio's auth service.
+	 * It is always minted with the anonymous application token (the site's API key), never a logged-in user's token:
+	 * the tasks are granted to API keys only.
+	 *
+	 * @param string $task
+	 * @param bool $fresh ignore the cached assertion
+	 * @return string
+	 * @throws \Exception
+	 */
+	public static function aiTaskToken(string $task, bool $fresh = false): string
+	{
+		if (!$fresh and isset(self::$aiTaskTokens[$task])) {
+			$decoded = self::decodeTokenIfValid(self::$aiTaskTokens[$task]);
+			if ($decoded and (empty($decoded['exp']) or $decoded['exp'] - time() > 60))
+				return self::$aiTaskTokens[$task];
+		}
+
+		[$http_code, $decoded] = self::jsonPost(self::GATEWAY_URL . 'auth/ai-task-token', ['task' => $task], self::getAppAuthToken(), 30);
+		if ($http_code === 401) {
+			// Expired or revoked application token: request a new one and retry once
+			if (class_exists('\\Model\\Cache\\Cache'))
+				\Model\Cache\Cache::getCacheAdapter()->delete('model.travio.auth-token');
+			[$http_code, $decoded] = self::jsonPost(self::GATEWAY_URL . 'auth/ai-task-token', ['task' => $task], self::getAppAuthToken(), 30);
+		}
+
+		if ($http_code !== 200 or empty($decoded['token']))
+			throw new \Exception('Errore in richiesta token AI: ' . self::errorMessage($decoded, $http_code), $http_code ?: 500);
+
+		self::$aiTaskTokens[$task] = $decoded['token'];
+		return $decoded['token'];
+	}
+
+	/**
+	 * Runs an AI task (e.g. "seo") on the EDitt AI tasks endpoint, with an assertion minted by aiTaskToken
+	 *
+	 * @param string $task
+	 * @param array $payload the task body, e.g. ['message' => [['type' => 'text', 'content' => '...']]]
+	 * @return array the task value
+	 * @throws \Exception
+	 */
+	public static function aiTask(string $task, array $payload): array
+	{
+		[$http_code, $decoded] = self::jsonPost(self::AI_TASKS_URL . $task, $payload, self::aiTaskToken($task), self::AI_TASK_TIMEOUT);
+		if ($http_code === 401) // Assertion refused (e.g. expired in between): mint a new one and retry once
+			[$http_code, $decoded] = self::jsonPost(self::AI_TASKS_URL . $task, $payload, self::aiTaskToken($task, true), self::AI_TASK_TIMEOUT);
+
+		if ($http_code !== 200 or !is_array($decoded))
+			throw new \Exception('Errore in richiesta AI ' . $task . ': ' . self::errorMessage($decoded, $http_code), $http_code ?: 500);
+
+		return $decoded;
+	}
+
+	/**
+	 * @param string $url
+	 * @param array $payload
+	 * @param string $token
+	 * @param int $timeout
+	 * @return array [http code, decoded body (null if not JSON)]
+	 * @throws \Exception
+	 */
+	private static function jsonPost(string $url, array $payload, string $token, int $timeout): array
+	{
+		$body = json_encode($payload, JSON_THROW_ON_ERROR);
+
+		$c = curl_init($url);
+		curl_setopt($c, CURLOPT_POST, 1);
+		curl_setopt($c, CURLOPT_POSTFIELDS, $body);
+		curl_setopt($c, CURLOPT_HTTPHEADER, [
+			'Connection: close',
+			'Content-Type: application/json',
+			'Content-length: ' . strlen($body),
+			'Authorization: Bearer ' . $token,
+		]);
+		curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 10);
+		curl_setopt($c, CURLOPT_TIMEOUT, $timeout);
+
+		$data = curl_exec($c);
+
+		if (curl_errno($c))
+			throw new \Exception('Errore cURL: ' . curl_error($c));
+
+		$http_code = curl_getinfo($c, CURLINFO_RESPONSE_CODE);
+
+		$decoded = json_decode($data ?: '', true);
+
+		return [$http_code, is_array($decoded) ? $decoded : null];
+	}
+
+	private static function errorMessage(?array $decoded, int $http_code): string
+	{
+		$error = [];
+		if (isset($decoded['error']))
+			$error[] = is_string($decoded['error']) ? $decoded['error'] : json_encode($decoded['error']);
+		if (isset($decoded['message']))
+			$error[] = $decoded['message'];
+
+		return $error ? implode(' - ', $error) : 'HTTP ' . $http_code;
 	}
 
 	public static function getSignedUrl(string $url): ?string
