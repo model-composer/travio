@@ -163,6 +163,15 @@ class ConfigProvider extends AbstractConfigProvider
 					return $currentConfig;
 				},
 			],
+			[
+				'version' => '0.4.14',
+				'migration' => function (array $currentConfig, string $env) {
+					$currentConfig['photos'] = [
+						'sizes' => [], // e.g. [800, ['h' => 400], ['w' => 800, 'h' => 600]]
+					];
+					return $currentConfig;
+				},
+			],
 		];
 	}
 
